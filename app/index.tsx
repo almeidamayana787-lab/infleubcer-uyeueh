@@ -15,12 +15,6 @@ if (global.ErrorUtils) {
   });
 }
 
-// @ts-ignore
-import { setUnhandledPromiseRejectionHandler } from 'react-native/Libraries/Core/PromiseRejectionTracking';
-setUnhandledPromiseRejectionHandler((id, error) => {
-  Alert.alert('Erro de Promise!', `ID: ${id}\n\n${error?.message || error}`);
-});
-
 // Configuração do canal de notificação
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
