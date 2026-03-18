@@ -1,7 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// DEBUG: Captura erros globais e mostra em um Alerta
+// @ts-ignore
+if (global.ErrorUtils) {
+  // @ts-ignore
+  const previousHandler = global.ErrorUtils.getGlobalHandler();
+  // @ts-ignore
+  global.ErrorUtils.setGlobalHandler((error, isFatal) => {
+    Alert.alert('Erro Detectado!', `Fatal: ${isFatal}\n\n${error.message}\n\n${error.stack}`);
+    if (previousHandler) previousHandler(error, isFatal);
+  });
+}
+
+// @ts-ignore
+import { setUnhandledPromiseRejectionHandler } from 'react-native/Libraries/Core/PromiseRejectionTracking';
+setUnhandledPromiseRejectionHandler((id, error) => {
+  Alert.alert('Erro de Promise!', `ID: ${id}\n\n${error?.message || error}`);
+});
 
 // Configuração do canal de notificação
 Notifications.setNotificationHandler({
