@@ -1,14 +1,14 @@
-name: Build iOS IPA (Sideload)
+name: Build iOS (EAS)
+
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
 
 jobs:
   build:
     runs-on: macos-15
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -21,49 +21,24 @@ jobs:
         run: |
           npm install
           npx expo install --fix
+          npm install -g eas-cli
 
-      - name: Setup Expo
+      - name: Set up Expo
         uses: expo/expo-github-action@v8
         with:
           expo-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Prebuild iOS
+      - name: Build with EAS Local
         run: |
-          rm -rf ios
-          npx expo prebuild --platform ios
+          # O comando --local gera o .ipa diretamente no runner do GitHub
+          eas build --platform ios --profile preview --local --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          NODE_ENV: production
 
-      - name: Build Unsigned IPA
-        run: |
-          cd ios
-          # Garante que os Pods estão instalados
-          pod install
-          
-          # Build usando xcodebuild com flags para ignorar assinatura
-          WORKSPACE=$(ls -d *.xcworkspace | head -n 1)
-          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
-          
-          xcodebuild -workspace "$WORKSPACE" \
-            -scheme "$SCHEME" \
-            -configuration Release \
-            -sdk iphoneos \
-            -destination 'generic/platform=iOS' \
-            -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
-            PROVISIONING_PROFILE_SPECIFIER="" \
-            AD_HOC_CODE_SIGNING_ALLOWED=YES \
-            OTHER_LDFLAGS="\$(inherited) -Wl,-no_compact_unwind"
-          
-          # Cria a estrutura da Payload para o IPA
-          mkdir -p Payload
-          cp -R build/Build/Products/Release-iphoneos/*.app Payload/
-          zip -r ../Nubank.ipa Payload
-          cd ..
-
-      - name: Upload IPA Artifact
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: Nubank-Unsigned-IPA
-          path: Nubank.ipa
-          retention-days: 5
+          name: ios-ipa
+          path: "*.ipa"
