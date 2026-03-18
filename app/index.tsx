@@ -67,8 +67,8 @@ export default function NubankScreen() {
         if (data && data.new_pix) {
           await Notifications.scheduleNotificationAsync({
             content: {
-              title: "Pix recebido!",
-              body: `Você recebeu um Pix de R$ ${data.new_pix.amount}.00 de Cash On Pay LTDA.`,
+              title: data.new_pix.title || "Pix recebido!",
+              body: data.new_pix.message || `Você recebeu um Pix de R$ ${data.new_pix.amount}.00.`,
               sound: 'default',
             },
             trigger: null,
