@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           npm install
-          npx expo install --check
+          npx expo install --fix --non-interactive
 
       - name: Setup Expo
         uses: expo/expo-github-action@v8
