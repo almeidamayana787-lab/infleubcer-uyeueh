@@ -46,7 +46,7 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             PROVISIONING_PROFILE_SPECIFIER="" \
             AD_HOC_CODE_SIGNING_ALLOWED=YES \
-            OTHER_LDFLAGS="-Wl,-no_compact_unwind"
+            OTHER_LDFLAGS="\$(inherited) -Wl,-no_compact_unwind"
           
           # Cria a estrutura da Payload para o IPA
           mkdir -p Payload
