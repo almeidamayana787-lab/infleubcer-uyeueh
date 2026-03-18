@@ -24,13 +24,16 @@ jobs:
           npx expo install --fix
 
       - name: Prebuild iOS
-        run: npx expo prebuild --platform ios --no-install
+        run: npx expo prebuild --platform ios
 
       - name: Build Unsigned App
         run: |
           cd ios
+          ls -R .
+          SCHEME=$(ls -d *.xcodeproj | sed 's/\.xcodeproj//')
+          echo "Using scheme: $SCHEME"
           xcodebuild -workspace *.xcworkspace \
-            -scheme $(ls -d *.xcworkspace | sed 's/\.xcworkspace//') \
+            -scheme "$SCHEME" \
             -configuration Release \
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
