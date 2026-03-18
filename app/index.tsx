@@ -11,9 +11,19 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Notifications from 'expo-notifications';
 import NotificationPopup from '../components/NotificationPopup';
 
 const API_URL = 'http://161.132.36.191:8000'; // Replace with actual VPS IP/URL
+
+// Configure how notifications are handled when the app is in the foreground
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 export default function NubankScreen() {
   const [token, setToken] = useState<string | null>(null);
@@ -28,7 +38,15 @@ export default function NubankScreen() {
 
   useEffect(() => {
     checkToken();
+    requestPermissions();
   }, []);
+
+  const requestPermissions = async () => {
+    const { status } = await Notifications.requestPermissionsAsync();
+    if (status !== 'granted') {
+      console.warn('Notification permissions not granted');
+    }
+  };
 
   useEffect(() => {
     let interval: any;
@@ -59,10 +77,21 @@ export default function NubankScreen() {
       if (res.ok) {
         const data = await res.json();
         if (data.new_pix) {
+          // 1. Show In-App Overlay (For custom Nubank look in video)
           setNotification({
             visible: true,
             title: data.new_pix.title,
             message: data.new_pix.message
+          });
+
+          // 2. Schedule Local Notification (For real iOS badge/sound)
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: data.new_pix.title,
+              body: data.new_pix.message,
+              sound: true,
+            },
+            trigger: null,
           });
 
           // Mark as viewed immediately
