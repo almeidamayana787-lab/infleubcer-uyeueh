@@ -1,4 +1,4 @@
-name: Build iOS (EAS)
+name: Build iOS (Sideloadly)
 
 on:
   push:
@@ -22,24 +22,33 @@ jobs:
         run: |
           npm install
           npx expo install --fix
-          npm install -g eas-cli
 
-      - name: Set up Expo
-        uses: expo/expo-github-action@v8
-        with:
-          expo-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Prebuild iOS
+        run: npx expo prebuild --platform ios --no-install
 
-      - name: Build with EAS Local
+      - name: Build Unsigned App
         run: |
-          # O comando --local gera o .ipa diretamente no runner do GitHub
-          eas build --platform ios --profile preview --local --non-interactive
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          NODE_ENV: production
+          cd ios
+          xcodebuild -workspace *.xcworkspace \
+            -scheme $(ls -d *.xcworkspace | sed 's/\.xcworkspace//') \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_IDENTITY="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES
 
+      - name: Create Unsigned IPA
+        run: |
+          mkdir -p Payload
+          cp -r ios/build/Build/Products/Release-iphoneos/*.app Payload/
+          zip -r NubankMirror_Unsigned.ipa Payload
+          
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: ios-ipa
-          path: "*.ipa"
+          name: NubankMirror_Unsigned
+          path: NubankMirror_Unsigned.ipa
