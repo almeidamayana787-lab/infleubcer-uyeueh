@@ -31,7 +31,7 @@ export default function NubankScreen() {
   }, []);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: any;
     if (token) {
       interval = setInterval(pollNotifications, 2000);
     }
@@ -161,22 +161,21 @@ export default function NubankScreen() {
               placeholderTextColor="#999"
               secureTextEntry
             />
-            <TouchableOpacity style={styles.tokenButton} @click="saveToken">
-            <Text style={styles.tokenButtonText}>Salvar e Conectar</Text>
-          </TouchableOpacity>
+            <TouchableOpacity style={styles.tokenButton} onPress={saveToken}>
+              <Text style={styles.tokenButtonText}>Salvar e Conectar</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        </View>
-  )
-}
+      )}
 
-{/* iOS Push Notification Mockup */ }
-<NotificationPopup
-  visible={notification.visible}
-  title={notification.title}
-  message={notification.message}
-  onHide={() => setNotification({ ...notification, visible: false })}
-/>
-    </SafeAreaView >
+      {/* iOS Push Notification Mockup */}
+      <NotificationPopup
+        visible={notification.visible}
+        title={notification.title}
+        message={notification.message}
+        onHide={() => setNotification({ ...notification, visible: false })}
+      />
+    </SafeAreaView>
   );
 }
 
