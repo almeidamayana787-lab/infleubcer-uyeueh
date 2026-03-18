@@ -32,7 +32,14 @@ jobs:
           ls -R .
           SCHEME=$(ls -d *.xcodeproj | sed 's/\.xcodeproj//')
           echo "Using scheme: $SCHEME"
-          xcodebuild -workspace *.xcworkspace \
+          
+          if [ -d "*.xcworkspace" ]; then
+            WORKSPACE_ARGS="-workspace *.xcworkspace"
+          else
+            WORKSPACE_ARGS="-project *.xcodeproj"
+          fi
+          
+          xcodebuild $WORKSPACE_ARGS \
             -scheme "$SCHEME" \
             -configuration Release \
             -sdk iphoneos \
