@@ -20,7 +20,7 @@ Criar uma experiência visual de alta fidelidade para marketing e influencers, s
 ### C. Saque Simulado (Gatilho de Notificação)
 1.  **Ação**: O influencer solicita um "Saque" no painel do cassino.
 2.  **Registro**: O sistema abate o saldo visual e cria uma entrada na tabela `demo_notifications`.
-3.  **Dados**: Armazena `amount`, `title` ("Pix Recebido"), e `message` ("Você acaba de receber um Pix de R$ [VALOR] de Cash On Pay LTDA").
+3.  **Dados**: Armazena `amount`, `title` ("Pix Recebido"), e `message` ("Você recebeu uma transferência de R$ [VALOR] de PAGFAST PAGAMENTOS LTDA.").
 
 ---
 
@@ -31,26 +31,35 @@ Criar uma experiência visual de alta fidelidade para marketing e influencers, s
 *   **Interface**: Tela minimalista (branca ou roxa padrão Nubank) com status de conexão.
 *   **Ícone**: Logotipo oficial do Nubank (para máximo realismo no Sideload).
 
-### B. Mecanismo de Escuta (Long Polling)
-O app não utilizará Push Notifications (FCM). Ele fará requisições HTTP silenciosas a cada 2 segundos.
+### B. Mecanismo de Conexão e Polling
+O app possui uma camada de persistência para facilitar o uso pelo influencer:
+
+1.  **Entrada de Token**: Ao abrir o app pela primeira vez, o influencer cola o seu "Bearer Token" (obtido no cassino).
+2.  **Persistência**: O app utiliza `AsyncStorage` para salvar esse token.
+3.  **Vigia (Long Polling)**: O app faz requisições HTTP silenciosas a cada 2 segundos para o endpoint `/api/demo/notifications`.
+4.  **Acknowledge (visto)**: Após exibir a notificação no iOS, o app envia um POST para marcar a notificação como vista, evitando repetições.
 
 ```javascript
-// Exemplo de lógica central no App.js do Expo
-setInterval(async () => {
-  const res = await fetch('https://seu-cassino.com/api/demo/notifications', {
-    headers: { 'Authorization': 'Bearer INFLUENCER_TOKEN' }
+// Resumo da lógica de Polling
+const pollNotifications = setInterval(async () => {
+  const res = await fetch(`${CASINO_URL}/api/demo/notifications`, {
+    headers: { 'Authorization': `Bearer ${token}` }
   });
   const data = await res.json();
   
   if (data.new_pix) {
-    // Dispara a notificação local que aparece no topo do iOS
+    // Exibe o banner oficial do iOS usando título e corpo vindo da API
     Notifications.scheduleNotificationAsync({
-      content: {
-        title: "Pix recebido!",
-        body: `Você recebeu um Pix de R$ ${data.new_pix.amount}.00 de Cash On Pay LTDA.`,
-        sound: 'default',
-      },
-      trigger: null,
+       content: { 
+         title: data.new_pix.title, 
+         body: data.new_pix.message 
+       },
+       trigger: null,
+    });
+    // Avisa o servidor para parar de enviar este ID
+    await fetch(`${CASINO_URL}/api/demo/notifications/${data.new_pix.id}/viewed`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
     });
   }
 }, 2000);
@@ -61,19 +70,19 @@ setInterval(async () => {
 ## 4. Estratégia de Deploy e Instalação (Linux & iOS)
 
 1.  **Compilação**: O código React Native será enviado ao GitHub.
-2.  **Build .ipa**: Utilizar GitHub Actions para compilar o binário `.ipa` sem necessidade de Mac local.
+2.  **Build .ipa**: Utilizar GitHub Actions para compilar o binário `.ipa`.
 3.  **Assinatura**: Utilizar o software **Sideloadly** no Linux/Windows.
 4.  **Instalação**: Conectar o iPhone via USB, carregar o `.ipa`, assinar com o Apple ID pessoal e instalar.
 5.  **Confiança**: Autorizar o desenvolvedor em *Ajustes > Geral > Gestão de Dispositivos*.
 
 ---
 
-## 5. Tabela de Banco de Dados (Sugestão)
+## 5. Tabela de Banco de Dados (`demo_notifications`)
 
 | Campo | Tipo | Descrição |
 | :--- | :--- | :--- |
 | `id` | BigInt | ID Único |
 | `user_id` | Foreign Key | ID do Influencer |
 | `amount` | Decimal | Valor do "Pix" |
-| `status` | Enum | pending, sent, viewed |
+| `status` | Enum | pending, viewed |
 | `created_at` | Timestamp | Hora do "Saque" |
