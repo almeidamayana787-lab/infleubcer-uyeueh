@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.nubank.clone"
+      "bundleIdentifier": "com.nubank.mirror.app"
     },
     "android": {
       "adaptiveIcon": {
