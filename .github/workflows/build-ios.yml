@@ -29,14 +29,13 @@ jobs:
       - name: Build Unsigned App
         run: |
           cd ios
-          ls -R .
           SCHEME=$(ls -d *.xcodeproj | sed 's/\.xcodeproj//')
           echo "Using scheme: $SCHEME"
           
-          if [ -d "*.xcworkspace" ]; then
-            WORKSPACE_ARGS="-workspace *.xcworkspace"
+          if ls *.xcworkspace >/dev/null 2>&1; then
+            WORKSPACE_ARGS="-workspace $(ls -d *.xcworkspace | head -n 1)"
           else
-            WORKSPACE_ARGS="-project *.xcodeproj"
+            WORKSPACE_ARGS="-project $(ls -d *.xcodeproj | head -n 1)"
           fi
           
           xcodebuild $WORKSPACE_ARGS \
@@ -45,6 +44,8 @@ jobs:
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
             -derivedDataPath build \
+            ONLY_ACTIVE_ARCH=NO \
+            ARCHS=arm64 \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_IDENTITY="" \
