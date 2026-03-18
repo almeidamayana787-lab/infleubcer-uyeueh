@@ -30,6 +30,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "56270c3d-2ff9-4d0b-983b-81e812fe4ac8"
+      }
+    },
+    "owner": "carlos_web222"
   }
 }
